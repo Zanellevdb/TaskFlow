@@ -2,6 +2,7 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import { errorMiddleware } from '@middlewares/error.middleware';
 import authRoutes from '@modules/auth/auth.routes';
+import workspaceRoutes from '@modules/workspace/workspace.routes';
 import logger from '@config/logger';
 
 const app: Application = express();
@@ -31,6 +32,7 @@ app.get('/health', (_req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/workspaces', workspaceRoutes);
 
 // Placeholder for other routes (will be added in later responses)
 app.get('/api/docs', (_req, res) => {

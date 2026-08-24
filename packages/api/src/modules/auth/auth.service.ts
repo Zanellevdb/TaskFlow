@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@db/prisma';
 import { ApiError } from '@utils/ApiError';
 import { hashPassword, comparePasswords } from '@utils/password';
 import {
@@ -7,8 +7,6 @@ import {
   verifyRefreshToken,
 } from '@utils/jwt';
 import { RegisterRequest, LoginRequest } from './auth.validation';
-
-const prisma = new PrismaClient();
 
 export interface AuthResponse {
   user: {

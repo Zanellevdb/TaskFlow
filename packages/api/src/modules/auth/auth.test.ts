@@ -1,8 +1,6 @@
 import request from 'supertest';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@db/prisma';
 import app from '@/app';
-
-const prisma = new PrismaClient();
 
 describe('Auth Module', () => {
   beforeAll(async () => {
