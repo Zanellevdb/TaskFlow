@@ -1,0 +1,24 @@
+{
+  "name": "taskflow",
+  "version": "1.0.0",
+  "description": "Collaborative project management platform",
+  "private": true,
+  "workspaces": [
+    "packages/api",
+    "packages/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "format": "prettier --write \"packages/**/*.{ts,tsx,json,md}\"",
+    "docker:up": "docker-compose -f docker-compose.dev.yml up",
+    "docker:down": "docker-compose -f docker-compose.dev.yml down",
+    "db:seed": "npm run db:seed --workspace=api"
+  },
+  "devDependencies": {
+    "@types/supertest": "^7.2.1",
+    "prettier": "^3.0.0"
+  }
+}
