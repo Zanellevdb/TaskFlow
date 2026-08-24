@@ -1,7 +1,10 @@
 import { Response } from 'express';
 import { AuthRequest } from '@middlewares/auth.middleware';
 import { workspaceService } from './workspace.service';
-import { CreateWorkspaceRequest } from './workspace.validation';
+import {
+  CreateWorkspaceRequest,
+  UpdateWorkspaceRequest,
+} from './workspace.validation';
 
 export class WorkspaceController {
   async create(req: AuthRequest, res: Response): Promise<void> {
@@ -62,6 +65,28 @@ export class WorkspaceController {
     res.status(200).json({
       success: true,
       message: 'Workspace retrieved successfully',
+      data: workspace,
+    });
+  }
+
+  async update(req: AuthRequest, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+      });
+      return;
+    }
+
+    const workspace = await workspaceService.updateWorkspace(
+      req.user.userId,
+      req.params.id,
+      req.body as UpdateWorkspaceRequest
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Workspace updated successfully',
       data: workspace,
     });
   }

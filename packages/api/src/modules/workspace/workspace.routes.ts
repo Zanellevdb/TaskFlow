@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authMiddleware } from '@middlewares/auth.middleware';
 import { validate } from '@middlewares/validate.middleware';
 import { workspaceController } from './workspace.controller';
-import { createWorkspaceSchema } from './workspace.validation';
+import { createWorkspaceSchema, updateWorkspaceSchema } from './workspace.validation';
 
 const router = Router();
 
@@ -28,6 +28,15 @@ router.post(
   validate(createWorkspaceSchema, 'body'),
   (req, res, next) => {
     workspaceController.create(req, res).catch(next);
+  }
+);
+
+router.patch(
+  '/:id',
+  authMiddleware,
+  validate(updateWorkspaceSchema, 'body'),
+  (req, res, next) => {
+    workspaceController.update(req, res).catch(next);
   }
 );
 

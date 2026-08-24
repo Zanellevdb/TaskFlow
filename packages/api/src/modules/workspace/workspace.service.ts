@@ -1,6 +1,9 @@
 import { prisma } from '@db/prisma';
 import { ApiError } from '@utils/ApiError';
-import { CreateWorkspaceRequest } from './workspace.validation';
+import {
+  CreateWorkspaceRequest,
+  UpdateWorkspaceRequest,
+} from './workspace.validation';
 
 export class WorkspaceService {
   async createWorkspace(
@@ -92,6 +95,65 @@ export class WorkspaceService {
       slug: membership.workspace.slug,
       description: membership.workspace.description,
       createdAt: membership.workspace.createdAt,
+      role: membership.role,
+    };
+  }
+
+  async updateWorkspace(
+    userId: string,
+    workspaceId: string,
+    data: UpdateWorkspaceRequest
+  ) {
+    const membership = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId,
+          workspaceId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new ApiError(404, 'Workspace not found');
+    }
+
+    if (membership.role !== 'OWNER' && membership.role !== 'ADMIN') {
+      throw new ApiError(
+        403,
+        'Only workspace owners and admins can update the workspace'
+      );
+    }
+
+    if (data.slug) {
+      const existingWorkspace = await prisma.workspace.findFirst({
+        where: {
+          slug: data.slug,
+          id: { not: workspaceId },
+        },
+      });
+
+      if (existingWorkspace) {
+        throw new ApiError(409, 'Workspace slug already exists');
+      }
+    }
+
+    const workspace = await prisma.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.slug !== undefined && { slug: data.slug }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
+      },
+    });
+
+    return {
+      id: workspace.id,
+      name: workspace.name,
+      slug: workspace.slug,
+      description: workspace.description,
+      createdAt: workspace.createdAt,
       role: membership.role,
     };
   }

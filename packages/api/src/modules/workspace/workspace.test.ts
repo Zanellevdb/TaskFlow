@@ -155,4 +155,169 @@ describe('Workspace Module', () => {
       expect(response.body.success).toBe(false);
     });
   });
+
+  describe('GET /api/workspaces/:id', () => {
+    it('should return a workspace the current user belongs to', async () => {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: 'my-workspace' },
+      });
+
+      const response = await request(app)
+        .get(`/api/workspaces/${workspace?.id}`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.id).toBe(workspace?.id);
+      expect(response.body.data.name).toBe('My Workspace');
+      expect(response.body.data.role).toBe('OWNER');
+    });
+
+    it('should reject access to a workspace the user does not belong to', async () => {
+      const otherUserResponse = await request(app)
+        .post('/api/auth/register')
+        .send({
+          email: 'workspace-other@example.com',
+          name: 'Other Workspace User',
+          password: 'password123',
+        });
+
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: 'my-workspace' },
+      });
+
+      const response = await request(app)
+        .get(`/api/workspaces/${workspace?.id}`)
+        .set(
+          'Authorization',
+          `Bearer ${otherUserResponse.body.data.accessToken}`
+        );
+
+      expect(response.status).toBe(404);
+      expect(response.body.success).toBe(false);
+
+      await prisma.user.delete({
+        where: {
+          id: otherUserResponse.body.data.user.id,
+        },
+      });
+    });
+
+    it('should reject access without authentication', async () => {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: 'my-workspace' },
+      });
+
+      const response = await request(app).get(
+        `/api/workspaces/${workspace?.id}`
+      );
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+    });
+  });
+
+  describe('PATCH /api/workspaces/:id', () => {
+    it('should update a workspace successfully', async () => {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: 'my-workspace' },
+      });
+
+      const response = await request(app)
+        .patch(`/api/workspaces/${workspace?.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'Updated Workspace',
+          description: 'Updated description',
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.name).toBe('Updated Workspace');
+      expect(response.body.data.slug).toBe('my-workspace');
+      expect(response.body.data.description).toBe('Updated description');
+      expect(response.body.data.role).toBe('OWNER');
+    });
+
+    it('should reject an update without authentication', async () => {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: 'my-workspace' },
+      });
+
+      const response = await request(app)
+        .patch(`/api/workspaces/${workspace?.id}`)
+        .send({
+          name: 'Unauthorized Update',
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+    });
+
+    it('should reject an empty update', async () => {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: 'my-workspace' },
+      });
+
+      const response = await request(app)
+        .patch(`/api/workspaces/${workspace?.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Validation error');
+    });
+
+    it('should reject a duplicate workspace slug', async () => {
+      await prisma.workspace.create({
+        data: {
+          name: 'Second Workspace',
+          slug: 'second-workspace',
+          members: {
+            create: {
+              userId,
+              role: 'OWNER',
+            },
+          },
+        },
+      });
+
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: 'my-workspace' },
+      });
+
+      const response = await request(app)
+        .patch(`/api/workspaces/${workspace?.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          slug: 'second-workspace',
+        });
+
+      expect(response.status).toBe(409);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Workspace slug already exists');
+
+      await prisma.workspace.delete({
+        where: { slug: 'second-workspace' },
+      });
+    });
+
+    it('should reject an invalid update', async () => {
+      const workspace = await prisma.workspace.findUnique({
+        where: { slug: 'my-workspace' },
+      });
+
+      const response = await request(app)
+        .patch(`/api/workspaces/${workspace?.id}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          name: 'A',
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Validation error');
+    });
+  });
 });
