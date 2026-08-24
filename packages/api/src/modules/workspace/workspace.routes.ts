@@ -14,6 +14,14 @@ router.get(
   }
 );
 
+router.get(
+  '/:id',
+  authMiddleware,
+  (req, res, next) => {
+    workspaceController.getById(req, res).catch(next);
+  }
+);
+
 router.post(
   '/',
   authMiddleware,

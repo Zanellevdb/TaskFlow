@@ -68,6 +68,33 @@ export class WorkspaceService {
       role: membership.role,
     }));
   }
+
+  async getWorkspaceById(userId: string, workspaceId: string) {
+    const membership = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId,
+          workspaceId,
+        },
+      },
+      include: {
+        workspace: true,
+      },
+    });
+
+    if (!membership) {
+      throw new ApiError(404, 'Workspace not found');
+    }
+
+    return {
+      id: membership.workspace.id,
+      name: membership.workspace.name,
+      slug: membership.workspace.slug,
+      description: membership.workspace.description,
+      createdAt: membership.workspace.createdAt,
+      role: membership.role,
+    };
+  }
 }
 
 export const workspaceService = new WorkspaceService();
