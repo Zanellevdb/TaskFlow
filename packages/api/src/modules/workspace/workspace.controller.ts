@@ -24,6 +24,26 @@ export class WorkspaceController {
       data: workspace,
     });
   }
+
+  async getMine(req: AuthRequest, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+      });
+      return;
+    }
+
+    const workspaces = await workspaceService.getUserWorkspaces(
+      req.user.userId
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Workspaces retrieved successfully',
+      data: workspaces,
+    });
+  }
 }
 
 export const workspaceController = new WorkspaceController();

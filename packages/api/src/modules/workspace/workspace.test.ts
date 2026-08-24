@@ -100,4 +100,59 @@ describe('Workspace Module', () => {
       expect(response.body.message).toBe('Validation error');
     });
   });
+
+  describe('GET /api/workspaces', () => {
+    it('should return the workspaces belonging to the current user', async () => {
+      const response = await request(app)
+        .get('/api/workspaces')
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].name).toBe('My Workspace');
+      expect(response.body.data[0].slug).toBe('my-workspace');
+      expect(response.body.data[0].role).toBe('OWNER');
+    });
+
+    it('should return an empty list for a user with no workspaces', async () => {
+      const secondUserResponse = await request(app)
+        .post('/api/auth/register')
+        .send({
+          email: 'workspace-empty@example.com',
+          name: 'Empty Workspace User',
+          password: 'password123',
+        });
+
+      const response = await request(app)
+        .get('/api/workspaces')
+        .set(
+          'Authorization',
+          `Bearer ${secondUserResponse.body.data.accessToken}`
+        );
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toEqual([]);
+
+      await prisma.workspaceMember.deleteMany({
+        where: {
+          userId: secondUserResponse.body.data.user.id,
+        },
+      });
+
+      await prisma.user.delete({
+        where: {
+          id: secondUserResponse.body.data.user.id,
+        },
+      });
+    });
+
+    it('should reject the request without authentication', async () => {
+      const response = await request(app).get('/api/workspaces');
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+    });
+  });
 });

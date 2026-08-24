@@ -47,6 +47,27 @@ export class WorkspaceService {
       role: workspace.members[0].role,
     };
   }
+
+  async getUserWorkspaces(userId: string) {
+    const memberships = await prisma.workspaceMember.findMany({
+      where: { userId },
+      include: {
+        workspace: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    return memberships.map((membership) => ({
+      id: membership.workspace.id,
+      name: membership.workspace.name,
+      slug: membership.workspace.slug,
+      description: membership.workspace.description,
+      createdAt: membership.workspace.createdAt,
+      role: membership.role,
+    }));
+  }
 }
 
 export const workspaceService = new WorkspaceService();

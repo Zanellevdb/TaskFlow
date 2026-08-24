@@ -6,6 +6,14 @@ import { createWorkspaceSchema } from './workspace.validation';
 
 const router = Router();
 
+router.get(
+  '/',
+  authMiddleware,
+  (req, res, next) => {
+    workspaceController.getMine(req, res).catch(next);
+  }
+);
+
 router.post(
   '/',
   authMiddleware,
