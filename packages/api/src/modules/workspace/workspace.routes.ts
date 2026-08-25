@@ -2,7 +2,10 @@ import { Router } from 'express';
 import { authMiddleware } from '@middlewares/auth.middleware';
 import { validate } from '@middlewares/validate.middleware';
 import { workspaceController } from './workspace.controller';
-import { createWorkspaceSchema, updateWorkspaceSchema } from './workspace.validation';
+import {
+  createWorkspaceSchema,
+  updateWorkspaceSchema,
+} from './workspace.validation';
 
 const router = Router();
 
@@ -37,6 +40,14 @@ router.patch(
   validate(updateWorkspaceSchema, 'body'),
   (req, res, next) => {
     workspaceController.update(req, res).catch(next);
+  }
+);
+
+router.delete(
+  '/:id',
+  authMiddleware,
+  (req, res, next) => {
+    workspaceController.delete(req, res).catch(next);
   }
 );
 

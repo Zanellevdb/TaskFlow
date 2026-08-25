@@ -157,6 +157,32 @@ export class WorkspaceService {
       role: membership.role,
     };
   }
+
+  async deleteWorkspace(userId: string, workspaceId: string) {
+    const membership = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId,
+          workspaceId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new ApiError(404, 'Workspace not found');
+    }
+
+    if (membership.role !== 'OWNER') {
+      throw new ApiError(
+        403,
+        'Only the workspace owner can delete the workspace'
+      );
+    }
+
+    await prisma.workspace.delete({
+      where: { id: workspaceId },
+    });
+  }
 }
 
 export const workspaceService = new WorkspaceService();

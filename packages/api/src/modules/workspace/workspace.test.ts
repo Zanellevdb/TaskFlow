@@ -320,4 +320,4 @@ describe('Workspace Module', () => {
       expect(response.body.message).toBe('Validation error');
     });
   });
-});
+});0

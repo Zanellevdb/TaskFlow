@@ -90,6 +90,26 @@ export class WorkspaceController {
       data: workspace,
     });
   }
+
+  async delete(req: AuthRequest, res: Response): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+      });
+      return;
+    }
+
+    await workspaceService.deleteWorkspace(
+      req.user.userId,
+      req.params.id
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Workspace deleted successfully',
+    });
+  }
 }
 
 export const workspaceController = new WorkspaceController();
