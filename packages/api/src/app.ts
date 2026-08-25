@@ -4,6 +4,7 @@ import { errorMiddleware } from '@middlewares/error.middleware';
 import authRoutes from '@modules/auth/auth.routes';
 import workspaceRoutes from '@modules/workspace/workspace.routes';
 import projectRoutes from '@modules/project/project.routes';
+import taskRoutes from '@modules/task/task.routes';
 import logger from '@config/logger';
 
 const app: Application = express();
@@ -35,6 +36,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // API documentation placeholder
 app.get('/api/docs', (_req, res) => {
