@@ -3,6 +3,7 @@ import cors from 'cors';
 import { errorMiddleware } from '@middlewares/error.middleware';
 import authRoutes from '@modules/auth/auth.routes';
 import workspaceRoutes from '@modules/workspace/workspace.routes';
+import projectRoutes from '@modules/project/project.routes';
 import logger from '@config/logger';
 
 const app: Application = express();
@@ -33,8 +34,9 @@ app.get('/health', (_req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/workspaces', workspaceRoutes);
+app.use('/api/projects', projectRoutes);
 
-// Placeholder for other routes (will be added in later responses)
+// API documentation placeholder
 app.get('/api/docs', (_req, res) => {
   res.status(200).json({
     message: 'API Documentation will be available at /api/docs',
