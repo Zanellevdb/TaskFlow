@@ -6,6 +6,7 @@ import workspaceRoutes from '@modules/workspace/workspace.routes';
 import projectRoutes from '@modules/project/project.routes';
 import taskRoutes from '@modules/task/task.routes';
 import taskLabelRoutes from '@modules/task-label/task-label.routes';
+import commentRoutes from '@modules/comment/comment.routes';
 import logger from '@config/logger';
 
 const app: Application = express();
@@ -39,6 +40,7 @@ app.use('/api/workspaces', workspaceRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/task-labels', taskLabelRoutes);
+app.use('/api/comments', commentRoutes);
 
 // API documentation placeholder
 app.get('/api/docs', (_req, res) => {
