@@ -1,6 +1,7 @@
 import { prisma } from '@db/prisma';
 import { ApiError } from '@utils/ApiError';
 import {
+  AddWorkspaceMemberRequest,
   CreateWorkspaceRequest,
   UpdateWorkspaceRequest,
 } from './workspace.validation';
@@ -72,7 +73,10 @@ export class WorkspaceService {
     }));
   }
 
-  async getWorkspaceById(userId: string, workspaceId: string) {
+  async getWorkspaceById(
+    userId: string,
+    workspaceId: string
+  ) {
     const membership = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {
@@ -99,6 +103,175 @@ export class WorkspaceService {
     };
   }
 
+  async getWorkspaceMembers(
+    userId: string,
+    workspaceId: string
+  ) {
+    const membership = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId,
+          workspaceId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new ApiError(404, 'Workspace not found');
+    }
+
+    return prisma.workspaceMember.findMany({
+      where: {
+        workspaceId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+  }
+
+  async addWorkspaceMember(
+    userId: string,
+    workspaceId: string,
+    data: AddWorkspaceMemberRequest
+  ) {
+    const membership = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId,
+          workspaceId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new ApiError(404, 'Workspace not found');
+    }
+
+    if (
+      membership.role !== 'OWNER' &&
+      membership.role !== 'ADMIN'
+    ) {
+      throw new ApiError(
+        403,
+        'Only workspace owners and admins can add members'
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email: data.email,
+      },
+    });
+
+    if (!user) {
+      throw new ApiError(
+        404,
+        'No TaskFlow user found with that email'
+      );
+    }
+
+    const existingMembership =
+      await prisma.workspaceMember.findUnique({
+        where: {
+          userId_workspaceId: {
+            userId: user.id,
+            workspaceId,
+          },
+        },
+      });
+
+    if (existingMembership) {
+      throw new ApiError(
+        409,
+        'User is already a member of this workspace'
+      );
+    }
+
+    const newMembership =
+      await prisma.workspaceMember.create({
+        data: {
+          userId: user.id,
+          workspaceId,
+          role: 'MEMBER',
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+    return newMembership;
+  }
+
+  async removeWorkspaceMember(
+    userId: string,
+    workspaceId: string,
+    memberId: string
+  ) {
+    const membership = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId,
+          workspaceId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new ApiError(404, 'Workspace not found');
+    }
+
+    if (
+      membership.role !== 'OWNER' &&
+      membership.role !== 'ADMIN'
+    ) {
+      throw new ApiError(
+        403,
+        'Only workspace owners and admins can remove members'
+      );
+    }
+
+    const memberToRemove =
+      await prisma.workspaceMember.findFirst({
+        where: {
+          id: memberId,
+          workspaceId,
+        },
+      });
+
+    if (!memberToRemove) {
+      throw new ApiError(404, 'Workspace member not found');
+    }
+
+    if (memberToRemove.role === 'OWNER') {
+      throw new ApiError(
+        403,
+        'The workspace owner cannot be removed'
+      );
+    }
+
+    await prisma.workspaceMember.delete({
+      where: {
+        id: memberId,
+      },
+    });
+  }
+
   async updateWorkspace(
     userId: string,
     workspaceId: string,
@@ -117,7 +290,10 @@ export class WorkspaceService {
       throw new ApiError(404, 'Workspace not found');
     }
 
-    if (membership.role !== 'OWNER' && membership.role !== 'ADMIN') {
+    if (
+      membership.role !== 'OWNER' &&
+      membership.role !== 'ADMIN'
+    ) {
       throw new ApiError(
         403,
         'Only workspace owners and admins can update the workspace'
@@ -133,15 +309,22 @@ export class WorkspaceService {
       });
 
       if (existingWorkspace) {
-        throw new ApiError(409, 'Workspace slug already exists');
+        throw new ApiError(
+          409,
+          'Workspace slug already exists'
+        );
       }
     }
 
     const workspace = await prisma.workspace.update({
       where: { id: workspaceId },
       data: {
-        ...(data.name !== undefined && { name: data.name }),
-        ...(data.slug !== undefined && { slug: data.slug }),
+        ...(data.name !== undefined && {
+          name: data.name,
+        }),
+        ...(data.slug !== undefined && {
+          slug: data.slug,
+        }),
         ...(data.description !== undefined && {
           description: data.description,
         }),
@@ -158,7 +341,10 @@ export class WorkspaceService {
     };
   }
 
-  async deleteWorkspace(userId: string, workspaceId: string) {
+  async deleteWorkspace(
+    userId: string,
+    workspaceId: string
+  ) {
     const membership = await prisma.workspaceMember.findUnique({
       where: {
         userId_workspaceId: {

@@ -1,6 +1,8 @@
+
 import express, { Application } from 'express';
 import cors from 'cors';
 import { errorMiddleware } from '@middlewares/error.middleware';
+import { apiRateLimiter } from '@middlewares/rateLimit.middleware';
 import authRoutes from '@modules/auth/auth.routes';
 import workspaceRoutes from '@modules/workspace/workspace.routes';
 import projectRoutes from '@modules/project/project.routes';
@@ -33,6 +35,9 @@ app.use((req, _res, next) => {
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+// General API rate limiting
+app.use('/api', apiRateLimiter);
 
 // API Routes
 app.use('/api/auth', authRoutes);

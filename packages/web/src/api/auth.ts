@@ -32,43 +32,52 @@ export interface RefreshTokenResponse {
   refreshToken: string;
 }
 
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
 export const register = async (
   data: RegisterRequest
 ): Promise<AuthResponse> => {
-  const response = await apiClient.post<AuthResponse>(
+  const response = await apiClient.post<ApiResponse<AuthResponse>>(
     '/auth/register',
     data
   );
 
-  return response.data;
+  return response.data.data;
 };
 
 export const login = async (
   data: LoginRequest
 ): Promise<AuthResponse> => {
-  const response = await apiClient.post<AuthResponse>(
+  const response = await apiClient.post<ApiResponse<AuthResponse>>(
     '/auth/login',
     data
   );
 
-  return response.data;
+  return response.data.data;
 };
 
 export const refreshToken = async (
   data: RefreshTokenRequest
 ): Promise<RefreshTokenResponse> => {
-  const response = await apiClient.post<RefreshTokenResponse>(
-    '/auth/refresh',
-    data
-  );
+  const response =
+    await apiClient.post<ApiResponse<RefreshTokenResponse>>(
+      '/auth/refresh',
+      data
+    );
 
-  return response.data;
+  return response.data.data;
 };
 
 export const getCurrentUser = async (): Promise<User> => {
-  const response = await apiClient.get<User>('/auth/me');
+  const response = await apiClient.get<ApiResponse<User>>(
+    '/auth/me'
+  );
 
-  return response.data;
+  return response.data.data;
 };
 
 export const logout = async (): Promise<void> => {

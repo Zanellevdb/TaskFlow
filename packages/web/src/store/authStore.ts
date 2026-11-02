@@ -35,6 +35,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await loginRequest(data);
 
+      localStorage.setItem(
+        'accessToken',
+        response.accessToken
+      );
+
+      localStorage.setItem(
+        'refreshToken',
+        response.refreshToken
+      );
+
       set({
         user: response.user,
         accessToken: response.accessToken,
@@ -51,6 +61,16 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     try {
       const response = await registerRequest(data);
+
+      localStorage.setItem(
+        'accessToken',
+        response.accessToken
+      );
+
+      localStorage.setItem(
+        'refreshToken',
+        response.refreshToken
+      );
 
       set({
         user: response.user,
@@ -84,6 +104,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await logoutRequest();
     } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+
       set({
         user: null,
         accessToken: null,

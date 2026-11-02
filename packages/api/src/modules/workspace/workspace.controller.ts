@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '@middlewares/auth.middleware';
 import { workspaceService } from './workspace.service';
 import {
+  AddWorkspaceMemberRequest,
   CreateWorkspaceRequest,
   UpdateWorkspaceRequest,
 } from './workspace.validation';
@@ -66,6 +67,81 @@ export class WorkspaceController {
       success: true,
       message: 'Workspace retrieved successfully',
       data: workspace,
+    });
+  }
+
+  async getMembers(
+    req: AuthRequest,
+    res: Response
+  ): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+      });
+      return;
+    }
+
+    const members =
+      await workspaceService.getWorkspaceMembers(
+        req.user.userId,
+        req.params.id
+      );
+
+    res.status(200).json({
+      success: true,
+      message: 'Workspace members retrieved successfully',
+      data: members,
+    });
+  }
+
+  async addMember(
+    req: AuthRequest,
+    res: Response
+  ): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+      });
+      return;
+    }
+
+    const member =
+      await workspaceService.addWorkspaceMember(
+        req.user.userId,
+        req.params.id,
+        req.body as AddWorkspaceMemberRequest
+      );
+
+    res.status(201).json({
+      success: true,
+      message: 'Workspace member added successfully',
+      data: member,
+    });
+  }
+
+  async removeMember(
+    req: AuthRequest,
+    res: Response
+  ): Promise<void> {
+    if (!req.user) {
+      res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+      });
+      return;
+    }
+
+    await workspaceService.removeWorkspaceMember(
+      req.user.userId,
+      req.params.id,
+      req.params.memberId
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Workspace member removed successfully',
     });
   }
 
