@@ -18,9 +18,27 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
+const allowedOrigins = (
+  process.env.CORS_ORIGINS ??
+  (process.env.NODE_ENV === 'production'
+    ? ''
+    : 'http://localhost:5173')
+)
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.NODE_ENV === 'production' ? [] : '*',
+    origin: (origin, callback) => {
+      // Allow requests without an Origin header.
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Do not grant CORS access to unapproved origins.
+      return callback(null, false);
+    },
     credentials: true,
   })
 );
